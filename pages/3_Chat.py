@@ -5,8 +5,8 @@ from streamlit_chat import message
 gradient_text_html = """<style>
 .gradient-text {
     font-weight: bold;
-    background: -webkit-linear-gradient(left, blue, lightblue);
-    background: linear-gradient(to right, blue, lightblue);
+    background: -webkit-linear-gradient(left, #BA4A00  , #EDBB99);
+    background: linear-gradient(to right, #BA4A00  , #EDBB99);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     display: inline;
@@ -43,7 +43,8 @@ if user_input !='':
     st.session_state.past.append(user_input)
     st.session_state.generated.append(reply[0])
     st.markdown(markdown_references)
-
+    markdown_references = ""
+    
     if st.session_state['generated']:    
         for i in range(len(st.session_state['generated'])-1, -1, -1):
 

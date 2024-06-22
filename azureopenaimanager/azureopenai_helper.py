@@ -42,8 +42,13 @@ class AzureOpenAIManager:
         return self.generate_answer(messages)
     
     def create_prompt(self,context,query):
-        header = "You are helpful assistant."
+        header = "You are helpful assistant. \
+        If the answer is not found within the context, please mention \
+        that the answer is not found \
+        Do not answer anything which is not in the context"
+        print(context)
         return header + context + "\n\n" + query + "\n"
+     
     
     def generate_reply_from_context(self,user_input, content, conversation):
         prompt = self.create_prompt(content,user_input)            

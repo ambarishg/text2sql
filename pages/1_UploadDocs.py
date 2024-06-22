@@ -8,11 +8,11 @@ from orchestrator.manage_docs import *
 
 SAVED_FOLDER = 'saved_files'
 
-gradient_text_html = """<style>
+gradient_text_html =  """<style>
 .gradient-text {
     font-weight: bold;
-    background: -webkit-linear-gradient(left, blue, lightblue);
-    background: linear-gradient(to right, blue, lightblue);
+    background: -webkit-linear-gradient(left, #BA4A00  , #EDBB99);
+    background: linear-gradient(to right, #BA4A00  , #EDBB99);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     display: inline;
