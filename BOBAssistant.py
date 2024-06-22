@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 import sys
-sys.path.append('..')
+sys.path.append('../')
 
 from config import *
 from azureopenaimanager.azureopenai_helper import *

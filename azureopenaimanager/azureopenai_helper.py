@@ -40,4 +40,15 @@ class AzureOpenAIManager:
                 {"role": "user", "content": query}
                 ]
         return self.generate_answer(messages)
+    
+    def create_prompt(self,context,query):
+        header = "You are helpful assistant."
+        return header + context + "\n\n" + query + "\n"
+    
+    def generate_reply_from_context(self,user_input, content, conversation):
+        prompt = self.create_prompt(content,user_input)            
+        conversation.append({"role": "assistant", "content": prompt})
+        conversation.append({"role": "user", "content": user_input})
+        reply = self.generate_answer(conversation)
+        return reply
 

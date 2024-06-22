@@ -4,6 +4,7 @@ from pathlib import Path
 from azure_blob.azure_blob_helper import AzureBlobHelper
 from azure_blob.read_pdf import PDFHelper
 from config import *
+from orchestrator.manage_docs import *
 
 SAVED_FOLDER = 'saved_files'
 
@@ -16,14 +17,7 @@ if uploaded_file is not None:
         save_path = Path(SAVED_FOLDER, uploaded_file.name)
         with open(save_path, mode='wb') as w:
             w.write(uploaded_file.getvalue())
-        
-
-        azure_blob_helper = AzureBlobHelper(AZ_ST_ACC_NAME, AZ_ST_ACC_KEY, AZ_ST_CONTAINER_NAME)
-        file_name = uploaded_file.name
-        full_path = os.path.join(SAVED_FOLDER, uploaded_file.name)
-        pdf_helper = PDFHelper(full_path,
-                               azure_blob_helper)
-        pdf_helper.write_pdf()
+        upload_docs(SAVED_FOLDER, uploaded_file.name)
         
         st.success('File uploaded successfully')
         st.balloons()

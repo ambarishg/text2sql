@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from dotenv import dotenv_values
 
 load_dotenv()
-values_env = dotenv_values(".env")
+values_env = dotenv_values("../.env")
 
 
 server = values_env["SERVER"]
