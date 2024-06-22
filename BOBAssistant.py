@@ -43,8 +43,22 @@ if st.session_state.show_settings:
                 st.session_state.username = username2
                 st.session_state.password = password2
 
+gradient_text_html = """
+<style>
+.gradient-text {
+    font-weight: bold;
+    background: -webkit-linear-gradient(left, blue, lightblue);
+    background: linear-gradient(to right, blue, lightblue);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline;
+    font-size: 3em;
+}
+</style>
+<div class="gradient-text">Talk in English with Data</div>
+"""
 
-st.title('English as a Query Language')
+st.markdown(gradient_text_html, unsafe_allow_html=True)
 
 user_input =st.text_input('Enter your query here:','How many suppliers are present ?')
 
@@ -78,12 +92,14 @@ if st.button('Submit'):
             # Execute the query
             sql_helper.connect()
             results = sql_helper.execute_query_return(query)
+            
             if results is None:
               st.write("No results found")
             else:
               st.write("This is the result of the query:")
-              for row in results:
-                st.write(row)
+              # Convert rows to a DataFrame
+              df = pd.DataFrame.from_records(results)
+              st.dataframe(df)
             sql_helper.disconnect()
 
     except Exception as e:

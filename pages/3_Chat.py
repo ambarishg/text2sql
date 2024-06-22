@@ -1,5 +1,6 @@
 import streamlit as st
 from orchestrator.manage_docs import *
+from streamlit_chat import message
 
 gradient_text_html = """<style>
 .gradient-text {
@@ -12,16 +13,15 @@ gradient_text_html = """<style>
     font-size: 3em;
 }
 </style>
-<div class="gradient-text">Q&A Docs</div>
+<div class="gradient-text">Chat with Docs</div>
 """
 
 st.markdown(gradient_text_html, unsafe_allow_html=True)
-user_input = st.text_input("Enter your question here:")
 
-if st.button("Submit"):
-
+user_input = st.text_input("Your Question","")
+if user_input !='':
     reply, metadata_source_page_to_return,URLs = search_docs(user_input)
-    st.write(reply[0])
+
     references = ""
     markdown_references = ""
     for page,url in zip(metadata_source_page_to_return,URLs):
@@ -31,4 +31,22 @@ if st.button("Submit"):
             markdown_references += f"[{page}]({url})\n"
         else:
             markdown_references += f", [{page}]({url})\n"
+    
+    
+    
+    if 'generated' not in st.session_state:
+            st.session_state['generated'] = []
+
+    if 'past' not in st.session_state:
+        st.session_state['past'] = []
+
+    st.session_state.past.append(user_input)
+    st.session_state.generated.append(reply[0])
     st.markdown(markdown_references)
+
+    if st.session_state['generated']:    
+        for i in range(len(st.session_state['generated'])-1, -1, -1):
+
+            message(st.session_state["generated"][i], key="AZUREAI-VECTORSEARCH" + str(i))
+            message(st.session_state['past'][i], is_user=True, key="AZUREAI-VECTORSEARCH" + str(i) + "_user")
+    

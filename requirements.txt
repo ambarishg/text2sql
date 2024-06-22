@@ -8,3 +8,4 @@ pypdf
 azure-ai-documentintelligence
 azure-search-documents
 sentence-transformers
+streamlit_chat
