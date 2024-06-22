@@ -1,0 +1,10 @@
+pyodbc
+python-dotenv
+openai
+streamlit
+pandas
+azure-storage-blob
+pypdf
+azure-ai-documentintelligence
+azure-search-documents
+sentence-transformers

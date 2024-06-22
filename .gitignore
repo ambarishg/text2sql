@@ -1,0 +1,5 @@
+.env
+saved_files/*.*
+__pycache__/*
+.venv
+*/__pycache__/*.*
