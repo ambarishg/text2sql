@@ -43,7 +43,10 @@ def upload_docs(SAVED_FOLDER, FILE_NAME):
     file_name = FILE_NAME
     full_path = os.path.join(SAVED_FOLDER, FILE_NAME)
     pdf_helper = PDFHelper(full_path,
-                            azure_blob_helper)
+                            azure_blob_helper,
+                            category=None,
+                            localpdfparser=False,
+                            verbose=True)
     pdf_helper.write_pdf()
     page_map = pdf_helper.get_document_text(full_path)
     sections = pdf_helper.create_sections(file_name, page_map)

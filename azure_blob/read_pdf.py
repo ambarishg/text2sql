@@ -5,7 +5,10 @@ import io
 import html
 
 from azure.ai.documentintelligence import DocumentIntelligenceClient
-from azure.ai.documentintelligence.models import AnalyzeResult
+from azure.core.credentials import AzureKeyCredential
+from azure.ai.documentintelligence.models import DocumentAnalysisFeature, AnalyzeResult
+
+from config import *
 
 import re
 
@@ -69,11 +72,20 @@ class PDFHelper:
                 page_map.append((page_num, offset, page_text))
                 offset += len(page_text)
         else:
-            if self.verbose: print(f"Extracting text from '{filename}' using Azure Form Recognizer")
-            form_recognizer_client = DocumentIntelligenceClient(endpoint=f"https://{formrecognizerservice}.cognitiveservices.azure.com/", credential=formrecognizer_creds, headers={"x-ms-useragent": "azure-search-chat-demo/1.0.0"})
+            if self.verbose: 
+                print(f"Extracting text from '{filename}' using Azure Form Recognizer")
+                print(f"Using Form Recognizer endpoint {DOC_INTELLIGENCE_ENDPOINT} and key {DOC_INTELLIGENCE_KEY}")
+            formrecognizer_creds = AzureKeyCredential(DOC_INTELLIGENCE_KEY)
+            form_recognizer_client = DocumentIntelligenceClient(endpoint=DOC_INTELLIGENCE_ENDPOINT,
+                                                                 credential=formrecognizer_creds)
             with open(filename, "rb") as f:
-                poller = form_recognizer_client.begin_analyze_document("prebuilt-layout", document = f)
-            form_recognizer_results = poller.result()
+                poller = form_recognizer_client.begin_analyze_document(
+                    "prebuilt-layout",
+                    analyze_request=f,
+                    features=[DocumentAnalysisFeature.KEY_VALUE_PAIRS],
+                    content_type="application/octet-stream",
+                )
+            form_recognizer_results: AnalyzeResult = poller.result()
 
             for page_num, page in enumerate(form_recognizer_results.pages):
                 tables_on_page = [table for table in form_recognizer_results.tables if table.bounding_regions[0].page_number == page_num + 1]
