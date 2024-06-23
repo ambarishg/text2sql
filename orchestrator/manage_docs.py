@@ -55,7 +55,9 @@ def upload_docs(SAVED_FOLDER, FILE_NAME):
     search.upload_documents(batch)
 
 def get_reply(user_input, content):
-    conversation=[{"role": "system", "content": "Assistant is a great language model formed by OpenAI."}]
+    conversation=[{"role": "system", "content": "If the answer is not found within the context, please mention \
+        that the answer is not found \
+        Do not answer anything which is not in the context"}]
     reply = azure_open_ai_manager.generate_reply_from_context(user_input, content, conversation)
     return reply
 
