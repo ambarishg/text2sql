@@ -250,13 +250,18 @@ class CustomAzureSearch:
         results_to_return = []
         metadata_source_filename_to_return = []
         metadata_source_page_to_return = []
+        reranker_score_to_return = []
         for result in results:
             results_to_return.append(result['content'])
+
+            if '@search.reranker_score' in result:
+                reranker_score_to_return.append(result['@search.reranker_score'])
+            
             metadata_source_page_to_return.append(result['sourcepage'])
             metadata_source_filename_to_return.append(result['sourcefile'])
         return results_to_return, \
                 metadata_source_filename_to_return, \
-                metadata_source_page_to_return
+                metadata_source_page_to_return, reranker_score_to_return
     
     def get_results_hybrid_search(self,query,
                                   list_fields=None):

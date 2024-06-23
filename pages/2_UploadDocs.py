@@ -6,6 +6,10 @@ from azure_blob.read_pdf import PDFHelper
 from config import *
 from orchestrator.manage_docs import *
 
+if 'access_token' not in st.session_state:
+    st.markdown("#### Please login to use this feature")
+    st.stop()
+
 SAVED_FOLDER = 'saved_files'
 
 gradient_text_html =  """<style>

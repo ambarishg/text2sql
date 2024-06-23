@@ -2,6 +2,10 @@ import streamlit as st
 from orchestrator.manage_docs import *
 from streamlit_chat import message
 
+if 'access_token' not in st.session_state:
+    st.markdown("#### Please login to use this feature")
+    st.stop()
+
 gradient_text_html = """<style>
 .gradient-text {
     font-weight: bold;
@@ -20,7 +24,8 @@ st.markdown(gradient_text_html, unsafe_allow_html=True)
 
 user_input = st.text_input("Your Question","")
 if user_input !='':
-    reply, metadata_source_page_to_return,URLs = search_docs(user_input)
+    reply, metadata_source_page_to_return,URLs,\
+         reranker_score = search_docs(user_input)
 
     references = ""
     markdown_references = ""
@@ -43,6 +48,8 @@ if user_input !='':
     st.session_state.past.append(user_input)
     st.session_state.generated.append(reply[0])
     st.markdown(markdown_references)
+    st.markdown(f"Reranker score: {reranker_score}")
+
     markdown_references = ""
     
     if st.session_state['generated']:    

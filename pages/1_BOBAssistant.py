@@ -8,6 +8,10 @@ from config import *
 from azureopenaimanager.azureopenai_helper import *
 from sqlmanager.azuresqlmanager import *
 
+if 'access_token' not in st.session_state:
+    st.markdown("#### Please login to use this feature")
+    st.stop()
+
 # Create a settings gear icon
 def set_sql_settings():
     if 'show_settings' not in st.session_state:

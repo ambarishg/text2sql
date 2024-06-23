@@ -73,14 +73,22 @@ def search_docs(query):
     """
     results, \
                 metadata_source_filename_to_return, \
-                metadata_source_page_to_return =  search.get_results_semantic_search(query)
+                metadata_source_page_to_return, \
+                    reranker_score =  search.get_results_semantic_search(query)
     
     context = "\n".join(results)
     reply = get_reply(query, context)
 
     URLs = []
+    
+    if reranker_score[0] < 2.6:
+        reranker_confidence = "Low"
+    elif reranker_score[0] < 3:
+        reranker_confidence = "Medium"
+    else:
+        reranker_confidence = "High"
 
     for page in metadata_source_page_to_return:
        URLs.append(azure_blob_helper.generate_sas_url(page))
 
-    return reply,metadata_source_page_to_return,URLs
+    return reply,metadata_source_page_to_return,URLs,reranker_confidence
