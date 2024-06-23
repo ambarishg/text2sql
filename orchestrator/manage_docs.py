@@ -45,7 +45,7 @@ def upload_docs(SAVED_FOLDER, FILE_NAME):
     pdf_helper = PDFHelper(full_path,
                             azure_blob_helper,
                             category=None,
-                            localpdfparser=False,
+                            localpdfparser=True,
                             verbose=True)
     pdf_helper.write_pdf()
     page_map = pdf_helper.get_document_text(full_path)
@@ -81,14 +81,18 @@ def search_docs(query):
 
     URLs = []
     
+    reranker_confidence = get_reranker_confidence(reranker_score)
+
+    for page in metadata_source_page_to_return:
+       URLs.append(azure_blob_helper.generate_sas_url(page))
+
+    return reply,metadata_source_page_to_return,URLs,reranker_confidence
+
+def get_reranker_confidence(reranker_score):
     if reranker_score[0] < 2.6:
         reranker_confidence = "Low"
     elif reranker_score[0] < 3:
         reranker_confidence = "Medium"
     else:
         reranker_confidence = "High"
-
-    for page in metadata_source_page_to_return:
-       URLs.append(azure_blob_helper.generate_sas_url(page))
-
-    return reply,metadata_source_page_to_return,URLs,reranker_confidence
+    return reranker_confidence

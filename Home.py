@@ -31,10 +31,12 @@ def get_token(auth_code):
         redirect_uri=REDIRECT_URI
     )
     return token_response
+    
 
 # Streamlit application
 st.title('Bank of Baroda Assistant')
 
+col1, col2 = st.columns(2)
 
 if 'access_token' not in st.session_state:
     auth_code = st.query_params.get_all(key = 'code')
@@ -49,12 +51,22 @@ if 'access_token' not in st.session_state:
             st.error('Login failed')
     else:
         auth_url = get_auth_url()
-        st.markdown(f'[Login with Azure AD]({auth_url})')
+        with col1:
+            st.markdown(f'[Login with Azure AD]({auth_url})')
 else:
     st.success('You are logged in!')
+    
 
-
-if st.button('Logout'):
+with col2:
+  if st.button('Logout'):
     del st.session_state['access_token']
     st.query_params.clear()  # Clear query parameters after logout
     st.success('You have logged out')
+
+
+st.markdown("<hr/>", unsafe_allow_html=True)
+st.markdown("#### Features of the Bank of Baroda Assistant")
+st.write("1. Talk in English with Data ")
+st.write("2. Upload a document to the assistant")
+st.write("3. Q&A for documents in the assistant")
+st.write("4. Chat with the assistant")

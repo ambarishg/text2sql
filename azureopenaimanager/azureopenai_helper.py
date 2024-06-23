@@ -55,4 +55,21 @@ class AzureOpenAIManager:
         conversation.append({"role": "user", "content": user_input})
         reply = self.generate_answer(conversation)
         return reply
+    
+    def get_image_analysis(self,prompt,data):
+        response = self.client.chat.completions.create(
+        model=self.deployment_id,
+       messages=[
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": [
+            {"type": "text", "text": prompt},
+            {"type": "image_url", "image_url": {
+                "url": f"data:image/png;base64,{data}"}
+            }
+        ]}
+    ],
+    temperature=0.0,
+)
+
+        return response.choices[0].message.content
 

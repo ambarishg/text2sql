@@ -11,3 +11,4 @@ sentence-transformers
 streamlit_chat
 msal
 requests
+pillow
