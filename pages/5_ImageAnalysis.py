@@ -1,16 +1,33 @@
 import streamlit as st
 from PIL import Image
-import base64
+from orchestrator.manage_docs import *
 
-# Open the image file and encode it as a base64 string
-def encode_image(data):
-    return base64.b64encode(data).decode("utf-8")
+if 'access_token' not in st.session_state:
+    st.markdown("#### Please login to use this feature")
+    st.stop()
 
-st.title("Image Analysis")
+gradient_text_html = """<style>
+.gradient-text {
+    font-weight: bold;
+    background: -webkit-linear-gradient(left, #BA4A00  , #EDBB99);
+    background: linear-gradient(to right, #BA4A00  , #EDBB99);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline;
+    font-size: 3em;
+}
+</style>
+<div class="gradient-text">Image Analysis</div>
+"""
+st.write(gradient_text_html, unsafe_allow_html=True)
 
 uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
-    encoded_image = encode_image(image.tobytes())
-    print(encoded_image)
+    st.image(image, caption='Uploaded Image.', use_column_width=True)
+    st.write("")
+
+    
+    response = get_image_analysis(uploaded_file.getbuffer())
+    st.write(response)

@@ -5,6 +5,7 @@ from azure_blob.read_pdf import PDFHelper
 from config import *
 from azure_ai_search.azure_ai_vector_search import CustomAzureSearch
 from azureopenaimanager.azureopenai_helper import AzureOpenAIManager
+import base64
 
 search = CustomAzureSearch(AZURE_SEARCH_SERVICE_ENDPOINT,
                             AZURE_SEARCH_ADMIN_KEY,
@@ -23,6 +24,13 @@ azure_open_ai_manager = AzureOpenAIManager(
                     endpoint=AZURE_OPENAI_ENDPOINT,
                     api_key=AZURE_OPENAI_KEY,
                     deployment_id=AZURE_OPENAI_DEPLOYMENT_ID,
+                    api_version="2023-05-15"
+                )
+
+azure_open_ai_manager_4o = AzureOpenAIManager(
+                    endpoint=AZURE_OPENAI_ENDPOINT,
+                    api_key=AZURE_OPENAI_KEY,
+                    deployment_id=AZURE_OPENAI_DEPLOYMENT_GPT_4O_ID,
                     api_version="2023-05-15"
                 )
 
@@ -89,6 +97,12 @@ def search_docs(query):
     return reply,metadata_source_page_to_return,URLs,reranker_confidence
 
 def get_reranker_confidence(reranker_score):
+    """
+    Get the confidence level of the reranker
+    :param reranker_score: The score from the reranker
+    :return: The confidence level
+    
+    """
     if reranker_score[0] < 2.6:
         reranker_confidence = "Low"
     elif reranker_score[0] < 3:
@@ -96,3 +110,19 @@ def get_reranker_confidence(reranker_score):
     else:
         reranker_confidence = "High"
     return reranker_confidence
+
+# Open the image file and encode it as a base64 string
+def encode_image(data):
+    return base64.b64encode(data).decode("utf-8")
+
+def get_image_analysis(image_data):
+    """
+    Get image analysis from Azure Open AI
+    :param image_data: The image data
+    :return: The image analysis response
+    
+    """
+    prompt = "Provide all the form values"
+    image_base64 = encode_image(image_data)
+    response = azure_open_ai_manager_4o.get_image_analysis(prompt,image_base64)
+    return response
