@@ -11,4 +11,6 @@ sentence-transformers
 streamlit_chat
 msal
 requests
+numpy==1.26.4
 pillow
+azure-storage-queue

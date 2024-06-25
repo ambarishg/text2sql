@@ -6,6 +6,11 @@ from config import *
 from azure_ai_search.azure_ai_vector_search import CustomAzureSearch
 from azureopenaimanager.azureopenai_helper import AzureOpenAIManager
 import base64
+from azurequeues import azure_queue_helper
+
+queue_service = azure_queue_helper.AzureQueueService(AZURE_QUEUE_STORAGE_ACCOUNT,
+                                                        AZURE_QUEUE_STORAGE_KEY,
+                                                        AZURE_QUEUE_NAME)
 
 search = CustomAzureSearch(AZURE_SEARCH_SERVICE_ENDPOINT,
                             AZURE_SEARCH_ADMIN_KEY,
@@ -19,6 +24,10 @@ search = CustomAzureSearch(AZURE_SEARCH_SERVICE_ENDPOINT,
 azure_blob_helper = AzureBlobHelper(AZ_ST_ACC_NAME, 
                                     AZ_ST_ACC_KEY, 
                                     AZ_ST_CONTAINER_NAME)
+
+azure_blob_helper_datasource = AzureBlobHelper(AZ_ST_ACC_NAME,
+                                                AZ_ST_ACC_KEY,
+                                                AZ_ST_DATASOURCE_CONTAINER_NAME)
 
 azure_open_ai_manager = AzureOpenAIManager(
                     endpoint=AZURE_OPENAI_ENDPOINT,
@@ -50,6 +59,14 @@ def upload_docs(SAVED_FOLDER, FILE_NAME):
     
     file_name = FILE_NAME
     full_path = os.path.join(SAVED_FOLDER, FILE_NAME)
+
+    
+    azure_blob_helper_datasource.upload_blob_from_path(full_path, 
+                                                       file_name)
+    message = {"full_path": 
+    f"https://{AZ_ST_ACC_NAME}.blob.core.windows.net/{AZ_ST_DATASOURCE_CONTAINER_NAME}/{file_name}",}
+    queue_service.send_message(message)
+
     pdf_helper = PDFHelper(full_path,
                             azure_blob_helper,
                             category=None,

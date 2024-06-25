@@ -50,6 +50,15 @@ class AzureBlobHelper:
         blob_client.upload_blob(data, overwrite=True)
         return True
     
+    def upload_blob_from_path(self, file_path, blob_name):
+        blob_service_client = BlobServiceClient(account_url=f"https://{self.account_name}.blob.core.windows.net/",
+                                               credential=self.account_key)
+        container_client = blob_service_client.get_container_client(self.container_name)
+        blob_client = container_client.get_blob_client(blob_name)
+        with open(file_path, "rb") as data:
+            blob_client.upload_blob(data, overwrite=True)
+        return True
+    
     def delete_blob(self, blob_name):
         blob_service_client = BlobServiceClient(account_url=f"https://{self.account_name}.blob.core.windows.net/",
                                                credential=self.account_key)
