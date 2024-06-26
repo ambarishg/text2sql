@@ -1,3 +1,4 @@
+import logging.config
 from pathlib import Path
 
 from azure_blob.azure_blob_helper import AzureBlobHelper
@@ -7,6 +8,7 @@ from azure_ai_search.azure_ai_vector_search import CustomAzureSearch
 from azureopenaimanager.azureopenai_helper import AzureOpenAIManager
 import base64
 from azurequeues import azure_queue_helper
+import logging
 
 queue_service = azure_queue_helper.AzureQueueService(AZURE_QUEUE_STORAGE_ACCOUNT,
                                                         AZURE_QUEUE_STORAGE_KEY,
@@ -55,7 +57,10 @@ def upload_docs(SAVED_FOLDER, FILE_NAME):
     
     """
    
+    logging.basicConfig(level=logging.INFO)
+    
     save_path = Path(SAVED_FOLDER, FILE_NAME)
+
     
     file_name = FILE_NAME
     full_path = os.path.join(SAVED_FOLDER, FILE_NAME)
@@ -65,22 +70,14 @@ def upload_docs(SAVED_FOLDER, FILE_NAME):
                                                        file_name)
     message = {"full_path": 
     f"https://{AZ_ST_ACC_NAME}.blob.core.windows.net/{AZ_ST_DATASOURCE_CONTAINER_NAME}/{file_name}",}
-    queue_service.send_message(message)
 
-    pdf_helper = PDFHelper(full_path,
-                            azure_blob_helper,
-                            category=None,
-                            localpdfparser=True,
-                            verbose=True)
-    pdf_helper.write_pdf()
-    page_map = pdf_helper.get_document_text(full_path)
-    sections = pdf_helper.create_sections(file_name, page_map)
-    batch = []
-    for section in sections:
-        section_embeddings = search.get_embedding_query_vector(section['content'])
-        section[EMBEDDING_FIELD_NAME] = section_embeddings.tolist()
-        batch.append(section)  
-    search.upload_documents(batch)
+    # Convert the dictionary to a JSON string
+    import json
+    message_str = json.dumps(message)
+    queue_service.send_message(message_str)
+
+    logging.info(f"File {file_name} sent to queue for indexing.")
+
 
 def get_reply(user_input, content):
     conversation=[{"role": "system", "content": "If the answer is not found within the context, please mention \
