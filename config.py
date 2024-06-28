@@ -5,7 +5,6 @@ from dotenv import dotenv_values
 load_dotenv()
 values_env = dotenv_values(".env")
 
-
 server = values_env["SERVER"]
 database = values_env["DATABASE"]
 username = values_env["USERNAME"]
@@ -40,6 +39,11 @@ TENANT_ID=values_env["TENANT_ID"]
 AZURE_QUEUE_STORAGE_ACCOUNT = values_env["AZURE_QUEUE_STORAGE_ACCOUNT"]
 AZURE_QUEUE_STORAGE_KEY = values_env["AZURE_QUEUE_STORAGE_KEY"]
 AZURE_QUEUE_NAME = values_env["AZURE_QUEUE_NAME"]
+
+COSMOSDB_ENDPOINT= values_env["COSMOSDB_ENDPOINT"]
+COSMOSDB_KEY= values_env["COSMOSDB_KEY"]
+COSMOSDB_DATABASE_NAME= values_env["COSMOSDB_DATABASE_NAME"]
+COSMOSDB_CONTAINER_NAME= values_env["COSMOSDB_CONTAINER_NAME"]
 
 
 

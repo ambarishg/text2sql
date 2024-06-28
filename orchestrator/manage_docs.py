@@ -9,6 +9,12 @@ from azureopenaimanager.azureopenai_helper import AzureOpenAIManager
 import base64
 from azurequeues import azure_queue_helper
 import logging
+from cosmos.cosmosdbmanager import CosmosDBManager
+import pandas as pd
+
+cosmos_db_manager = CosmosDBManager(COSMOSDB_ENDPOINT, 
+                                    COSMOSDB_KEY, 
+                                    COSMOSDB_DATABASE_NAME, COSMOSDB_CONTAINER_NAME)
 
 queue_service = azure_queue_helper.AzureQueueService(AZURE_QUEUE_STORAGE_ACCOUNT,
                                                         AZURE_QUEUE_STORAGE_KEY,
@@ -140,3 +146,26 @@ def get_image_analysis(image_data):
     image_base64 = encode_image(image_data)
     response = azure_open_ai_manager_4o.get_image_analysis(prompt,image_base64)
     return response
+
+def get_indexed_files():
+    """
+    Get the uploaded files to index
+    :return: The uploaded files
+    
+    """
+
+    query = "SELECT * FROM c WHERE c.processed = true"
+
+    uploaded_files = cosmos_db_manager.read_items(query)
+
+    li = []
+
+    for row in uploaded_files:
+        li.append(row["filename"])
+
+    df_indexed_files = pd.DataFrame(li, columns=["filename"])
+    return df_indexed_files
+    
+
+        
+        
