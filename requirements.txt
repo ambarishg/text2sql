@@ -14,3 +14,5 @@ requests
 numpy==1.26.4
 pillow
 azure-storage-queue
+azure-cosmos
+streamlit-aggrid

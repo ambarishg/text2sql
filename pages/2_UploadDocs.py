@@ -37,6 +37,6 @@ if uploaded_file is not None:
             w.write(uploaded_file.getvalue())
         upload_docs(SAVED_FOLDER, uploaded_file.name)
         
-        st.success('File uploaded successfully')
+        st.success('File has been sent successfully for processing.')
         st.balloons()
 
