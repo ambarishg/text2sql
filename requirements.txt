@@ -16,3 +16,8 @@ pillow
 azure-storage-queue
 azure-cosmos
 streamlit-aggrid
+fastapi
+fastapi-cors
+uvicorn
+pydantic
+python-multipart
