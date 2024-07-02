@@ -12,6 +12,14 @@ import logging
 from cosmos.cosmosdbmanager import CosmosDBManager
 import pandas as pd
 from fastapi import UploadFile, File
+from sqlmanager.azuresqlmanager import AzureSQLManager
+
+from pydantic import BaseModel
+from typing import Dict, Any, List
+
+class DataFrameResponse(BaseModel):
+    dataframe: List[Dict[str, Any]]
+    sql_query: str
 
 
 async def upload_docs(file_data: UploadFile = File(...)):
@@ -79,6 +87,10 @@ def search_docs(query):
                             MODEL_NAME,
                             EMBEDDING_FIELD_NAME,
                             AZURE_SEARCH_SEMANTIC_CONFIG_NAME)
+    
+    azure_blob_helper = AzureBlobHelper(AZ_ST_ACC_NAME,
+                                    AZ_ST_ACC_KEY,
+                                    AZ_ST_CONTAINER_NAME)
     results, \
                 metadata_source_filename_to_return, \
                 metadata_source_page_to_return, \
@@ -159,4 +171,57 @@ def get_indexed_files():
 
     df_indexed_files = pd.DataFrame(li, columns=["filename"])
     return df_indexed_files
+
+
+def _get_SQL_query(user_input):
+    
+    return get_SQL_query(user_input, server, username, password, database)
+
+def get_SQL_query(user_input,
+                  server,
+                  user_name,
+                  password,
+                  database):
   
+  
+    
+  azure_open_ai_manager = AzureOpenAIManager(
+                    endpoint=AZURE_OPENAI_ENDPOINT,
+                    api_key=AZURE_OPENAI_KEY,
+                    deployment_id=AZURE_OPENAI_DEPLOYMENT_ID,
+                    api_version="2023-05-15"
+                )
+  
+  sql_query = None
+  dict_df = None
+    
+  msg,_,_,_ = azure_open_ai_manager.generate_answer_document(user_input)
+
+  if "```sql" not in msg:
+        sql_query = None
+  else:
+        query = msg.split("```sql")[1].split("```")[0].strip().replace("\n", " ")
+        sql_query = query
+
+  if sql_query:
+      # Create an instance of the AzureSQLManager
+
+        print(sql_query)
+        sql_helper = AzureSQLManager(server, \
+                                     database, \
+                                     user_name, \
+                                     password)
+        # Execute the query
+        sql_helper.connect()
+        results = sql_helper.execute_query_return(sql_query)
+        df = pd.DataFrame.from_records(results)
+        df.columns = ['col' + str(col) for col in df.columns]
+        dict_df = df.to_dict('records')
+  else:
+        dict_df = None
+
+  return DataFrameResponse(dataframe=dict_df, 
+                           sql_query=sql_query)
+  
+def get_SQL_VARS():
+    return server, database, username, password
