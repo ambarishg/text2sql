@@ -11,48 +11,10 @@ from azurequeues import azure_queue_helper
 import logging
 from cosmos.cosmosdbmanager import CosmosDBManager
 import pandas as pd
-
-cosmos_db_manager = CosmosDBManager(COSMOSDB_ENDPOINT, 
-                                    COSMOSDB_KEY, 
-                                    COSMOSDB_DATABASE_NAME, COSMOSDB_CONTAINER_NAME)
-
-queue_service = azure_queue_helper.AzureQueueService(AZURE_QUEUE_STORAGE_ACCOUNT,
-                                                        AZURE_QUEUE_STORAGE_KEY,
-                                                        AZURE_QUEUE_NAME)
-
-search = CustomAzureSearch(AZURE_SEARCH_SERVICE_ENDPOINT,
-                            AZURE_SEARCH_ADMIN_KEY,
-                            AZURE_SEARCH_INDEX_NAME,
-                            NUMBER_OF_RESULTS_TO_RETURN,
-                            NUMBER_OF_NEAR_NEIGHBORS,
-                            MODEL_NAME,
-                            EMBEDDING_FIELD_NAME,
-                            AZURE_SEARCH_SEMANTIC_CONFIG_NAME)
-
-azure_blob_helper = AzureBlobHelper(AZ_ST_ACC_NAME, 
-                                    AZ_ST_ACC_KEY, 
-                                    AZ_ST_CONTAINER_NAME)
-
-azure_blob_helper_datasource = AzureBlobHelper(AZ_ST_ACC_NAME,
-                                                AZ_ST_ACC_KEY,
-                                                AZ_ST_DATASOURCE_CONTAINER_NAME)
-
-azure_open_ai_manager = AzureOpenAIManager(
-                    endpoint=AZURE_OPENAI_ENDPOINT,
-                    api_key=AZURE_OPENAI_KEY,
-                    deployment_id=AZURE_OPENAI_DEPLOYMENT_ID,
-                    api_version="2023-05-15"
-                )
-
-azure_open_ai_manager_4o = AzureOpenAIManager(
-                    endpoint=AZURE_OPENAI_ENDPOINT,
-                    api_key=AZURE_OPENAI_KEY,
-                    deployment_id=AZURE_OPENAI_DEPLOYMENT_GPT_4O_ID,
-                    api_version="2023-05-15"
-                )
+from fastapi import UploadFile, File
 
 
-def upload_docs(SAVED_FOLDER, FILE_NAME):
+async def upload_docs(file_data: UploadFile = File(...)):
 
     """
     Uploads the document to Azure Blob Storage and Azure Search
@@ -64,16 +26,17 @@ def upload_docs(SAVED_FOLDER, FILE_NAME):
     """
    
     logging.basicConfig(level=logging.INFO)
-    
-    save_path = Path(SAVED_FOLDER, FILE_NAME)
 
+    azure_blob_helper_datasource = AzureBlobHelper(AZ_ST_ACC_NAME,
+                                                AZ_ST_ACC_KEY,
+                                                AZ_ST_DATASOURCE_CONTAINER_NAME)
+    queue_service = azure_queue_helper.AzureQueueService(AZURE_QUEUE_STORAGE_ACCOUNT,
+                                                        AZURE_QUEUE_STORAGE_KEY,
+                                                        AZURE_QUEUE_NAME)
     
-    file_name = FILE_NAME
-    full_path = os.path.join(SAVED_FOLDER, FILE_NAME)
-
-    
-    azure_blob_helper_datasource.upload_blob_from_path(full_path, 
-                                                       file_name)
+    content = await file_data.read()
+    file_name = file_data.filename
+    azure_blob_helper_datasource.upload_blob(content, file_name)
     message = {"full_path": 
     f"https://{AZ_ST_ACC_NAME}.blob.core.windows.net/{AZ_ST_DATASOURCE_CONTAINER_NAME}/{file_name}",}
 
@@ -86,6 +49,14 @@ def upload_docs(SAVED_FOLDER, FILE_NAME):
 
 
 def get_reply(user_input, content):
+
+    azure_open_ai_manager = AzureOpenAIManager(
+                    endpoint=AZURE_OPENAI_ENDPOINT,
+                    api_key=AZURE_OPENAI_KEY,
+                    deployment_id=AZURE_OPENAI_DEPLOYMENT_ID,
+                    api_version="2023-05-15"
+                )
+    
     conversation=[{"role": "system", "content": "If the answer is not found within the context, please mention \
         that the answer is not found \
         Do not answer anything which is not in the context"}]
@@ -99,6 +70,15 @@ def search_docs(query):
     :return: The search results
     
     """
+
+    search = CustomAzureSearch(AZURE_SEARCH_SERVICE_ENDPOINT,
+                            AZURE_SEARCH_ADMIN_KEY,
+                            AZURE_SEARCH_INDEX_NAME,
+                            NUMBER_OF_RESULTS_TO_RETURN,
+                            NUMBER_OF_NEAR_NEIGHBORS,
+                            MODEL_NAME,
+                            EMBEDDING_FIELD_NAME,
+                            AZURE_SEARCH_SEMANTIC_CONFIG_NAME)
     results, \
                 metadata_source_filename_to_return, \
                 metadata_source_page_to_return, \
@@ -142,6 +122,13 @@ def get_image_analysis(image_data):
     :return: The image analysis response
     
     """
+    azure_open_ai_manager_4o = AzureOpenAIManager(
+                    endpoint=AZURE_OPENAI_ENDPOINT,
+                    api_key=AZURE_OPENAI_KEY,
+                    deployment_id=AZURE_OPENAI_DEPLOYMENT_GPT_4O_ID,
+                    api_version="2023-05-15"
+                )
+
     prompt = "Provide all the form values"
     image_base64 = encode_image(image_data)
     response = azure_open_ai_manager_4o.get_image_analysis(prompt,image_base64)
@@ -154,6 +141,13 @@ def get_indexed_files():
     
     """
 
+    cosmos_db_manager = CosmosDBManager(COSMOSDB_ENDPOINT, 
+                                    COSMOSDB_KEY, 
+                                    COSMOSDB_DATABASE_NAME, COSMOSDB_CONTAINER_NAME)
+
+
+
+
     query = "SELECT * FROM c WHERE c.processed = true"
 
     uploaded_files = cosmos_db_manager.read_items(query)
@@ -165,7 +159,4 @@ def get_indexed_files():
 
     df_indexed_files = pd.DataFrame(li, columns=["filename"])
     return df_indexed_files
-    
-
-        
-        
+  

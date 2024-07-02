@@ -6,11 +6,13 @@ from azure_blob.read_pdf import PDFHelper
 from config import *
 from orchestrator.manage_docs import *
 
+import requests
+
 if 'access_token' not in st.session_state:
     st.markdown("#### Please login to use this feature")
     st.stop()
 
-SAVED_FOLDER = 'saved_files'
+SAVED_FOLDER = 'saved_files/'
 
 gradient_text_html =  """<style>
 .gradient-text {
@@ -30,13 +32,19 @@ st.markdown(gradient_text_html, unsafe_allow_html=True)
 uploaded_file = st.file_uploader(label = "Upload file", type=["pdf"])
 category = st.text_input('Enter the category of the document')
 short_description = st.text_input('Enter the short description of the document')
+
+category = category.strip()
+short_description = short_description.strip()
+
 if uploaded_file is not None:
     if st.button('Save File'):
-        save_path = Path(SAVED_FOLDER, uploaded_file.name)
-        with open(save_path, mode='wb') as w:
-            w.write(uploaded_file.getvalue())
-        upload_docs(SAVED_FOLDER, uploaded_file.name)
         
-        st.success('File has been sent successfully for processing.')
-        st.balloons()
+       files = {"file": uploaded_file}
+       response = requests.post("http://localhost:8000/upload_docs/", files=files)
+       if response.status_code == 200:
+            st.success(f"File {uploaded_file.name} has been sent for processing \
+                        successfully!")
+       else:
+            st.error("Upload failed.")
+
 
