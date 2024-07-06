@@ -33,7 +33,7 @@ if st.button('Submit'):
     try:
         
         response = requests.post("http://localhost:8000/get_sql_results/", 
-                                    params={"query": user_input})
+                                    json={"query": user_input})
         
         data = response.json()
 

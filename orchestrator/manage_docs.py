@@ -1,5 +1,6 @@
 import logging.config
 from pathlib import Path
+from PIL import Image
 
 from azure_blob.azure_blob_helper import AzureBlobHelper
 from azure_blob.read_pdf import PDFHelper
@@ -16,6 +17,11 @@ from sqlmanager.azuresqlmanager import AzureSQLManager
 
 from pydantic import BaseModel
 from typing import Dict, Any, List
+
+from api.chat import ChatResponse
+from api.getFiles import FilesResponse
+
+import io
 
 class DataFrameResponse(BaseModel):
     dataframe: List[Dict[str, Any]]
@@ -106,7 +112,9 @@ def search_docs(query):
     for page in metadata_source_page_to_return:
        URLs.append(azure_blob_helper.generate_sas_url(page))
 
-    return reply,metadata_source_page_to_return,URLs,reranker_confidence
+    return ChatResponse(reply=reply[0], 
+    metadata_source_page_to_return=metadata_source_page_to_return,
+    URLs=URLs, reranker_confidence=reranker_confidence)
 
 def get_reranker_confidence(reranker_score):
     """
@@ -127,23 +135,29 @@ def get_reranker_confidence(reranker_score):
 def encode_image(data):
     return base64.b64encode(data).decode("utf-8")
 
-def get_image_analysis(image_data):
+async def get_image_analysis(image_data: UploadFile = File(...)):
     """
     Get image analysis from Azure Open AI
     :param image_data: The image data
     :return: The image analysis response
     
     """
+    print("Inside get_image_analysis")
     azure_open_ai_manager_4o = AzureOpenAIManager(
                     endpoint=AZURE_OPENAI_ENDPOINT,
                     api_key=AZURE_OPENAI_KEY,
                     deployment_id=AZURE_OPENAI_DEPLOYMENT_GPT_4O_ID,
                     api_version="2023-05-15"
                 )
-
-    prompt = "Provide all the form values"
-    image_base64 = encode_image(image_data)
+    from PIL import Image
+    prompt = "Provide all the form values in the form of a JSON object."
+    
+    contents = await image_data.read()
+    image_base64 = encode_image(contents)
+    
     response = azure_open_ai_manager_4o.get_image_analysis(prompt,image_base64)
+
+    response = response.replace("```json", "").replace("```", "")
     return response
 
 def get_indexed_files():
@@ -168,9 +182,8 @@ def get_indexed_files():
 
     for row in uploaded_files:
         li.append(row["filename"])
-
-    df_indexed_files = pd.DataFrame(li, columns=["filename"])
-    return df_indexed_files
+    
+    return FilesResponse(file_list=li)
 
 
 def _get_SQL_query(user_input):
