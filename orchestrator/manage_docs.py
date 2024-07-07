@@ -174,7 +174,7 @@ def get_indexed_files():
 
 
 
-    query = "SELECT * FROM c WHERE c.processed = true"
+    query = "SELECT * FROM c WHERE c.processed = true ORDER BY c._ts DESC"
 
     uploaded_files = cosmos_db_manager.read_items(query)
 

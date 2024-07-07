@@ -8,6 +8,8 @@ from orchestrator.manage_docs import upload_docs, _get_SQL_query, \
 import logging
 from fastapi import UploadFile, File
 from api.chat import SQLRequest
+from api.document_comparator import *
+from orchestrator.document_comparator import compare_documents
 
 
 app = FastAPI()
@@ -71,7 +73,14 @@ async def _get_files_indexed():
         logging.error(e)
         raise HTTPException(status_code=500, detail="Error in search")
     
-
+@app.post("/compare_docs/")
+async def _compare_documents(user_input: DocumentComparatorRequest):
+    try:
+        response =  compare_documents(user_input)
+        return response
+    except Exception as e:
+        logging.error(e)
+        raise HTTPException(status_code=500, detail="Error in Compare Documents")
 
 if __name__ == "__main__":
     import uvicorn
