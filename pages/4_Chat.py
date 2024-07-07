@@ -1,5 +1,5 @@
 import streamlit as st
-from orchestrator.manage_docs import *
+import requests
 from streamlit_chat import message
 
 if 'access_token' not in st.session_state:
@@ -24,8 +24,14 @@ st.markdown(gradient_text_html, unsafe_allow_html=True)
 
 user_input = st.text_input("Your Question","")
 if user_input !='':
-    reply, metadata_source_page_to_return,URLs,\
-         reranker_score = search_docs(user_input)
+    response =  requests.post("http://localhost:8000/get_answer_from_question/", 
+                              json={"query": user_input})
+    data = response.json()
+
+    reply = data.get("reply")
+    metadata_source_page_to_return = data.get("metadata_source_page_to_return")
+    URLs = data.get("URLs")
+    reranker_score = data.get("reranker_confidence")
 
     references = ""
     markdown_references = ""
@@ -46,7 +52,7 @@ if user_input !='':
         st.session_state['past'] = []
 
     st.session_state.past.append(user_input)
-    st.session_state.generated.append(reply[0])
+    st.session_state.generated.append(reply)
     st.markdown(markdown_references)
     st.markdown(f"Reranker score: {reranker_score}")
 

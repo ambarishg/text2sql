@@ -1,6 +1,7 @@
 import streamlit as st
 from PIL import Image
 from orchestrator.manage_docs import *
+import requests
 from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode, DataReturnMode
 
 if 'access_token' not in st.session_state:
@@ -22,7 +23,13 @@ gradient_text_html = """<style>
 """
 st.write(gradient_text_html, unsafe_allow_html=True)
 
-df_indexed_files = get_indexed_files()
+response =  requests.post("http://localhost:8000/get_files_indexed/")
+data = response.json()
+
+
+li_indexed_files = data.get("file_list")
+
+df_indexed_files = pd.DataFrame(li_indexed_files, columns=['File Name'])
 
 # Configure AgGrid options
 gb = GridOptionsBuilder.from_dataframe(df_indexed_files)

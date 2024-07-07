@@ -21,3 +21,6 @@ fastapi-cors
 uvicorn
 pydantic
 python-multipart
+langchain-community
+langchain_openai
+langchain
