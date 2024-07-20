@@ -24,3 +24,8 @@ python-multipart
 langchain-community
 langchain_openai
 langchain
+six
+python-jose==3.3.0
+cryptography
+requests
+
