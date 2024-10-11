@@ -259,6 +259,7 @@ def get_chat_history(conversation_id):
                                     COSMOSDB_CONTAINER_NAME_CONVERSATIONS)
     query = f'SELECT * FROM c WHERE c.conversation_id = "{conversation_id}"'
     items = cosmosdb_helper.read_items(query)
+    
     return items
 
 def get_recent_conversations():
@@ -272,9 +273,9 @@ def get_recent_conversations():
     for item in items:
         d= {}
         d["conversation_id"] = item["conversation_id"]
-        d["short_name"] = item["name"]
+        d["short_name"] = item["short_name"]
         conversation_header_list.append(d)
-    return ConversationHeaders(conversation_header=
+    return ConversationHeaders(conversationsHeaders=
                                conversation_header_list)
 
 

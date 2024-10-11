@@ -15,6 +15,8 @@ from six.moves.urllib.request import urlopen
 from functools import wraps
 from jose import jwt
 import requests
+from orchestrator.manage_docs import get_recent_conversations
+from api.conversation import ConversationHeaders, ConversationHistory
 
 app = FastAPI()
 
@@ -132,6 +134,15 @@ async def _compare_documents(user_input: DocumentComparatorRequest, user=Depends
     except Exception as e:
         logging.error(e)
         raise HTTPException(status_code=500, detail="Error in Compare Documents")
+    
+@app.post("/get_conversation_headers/")
+async def get_conversation_headers():
+    try:
+        response = get_recent_conversations(user =Depends(get_current_user) )
+        return response
+    except Exception as e:
+        logging.error(e)
+        raise HTTPException(status_code=500, detail="Error in Get Conversation Headers")
 
 if __name__ == "__main__":
     import uvicorn

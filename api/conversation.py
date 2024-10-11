@@ -2,9 +2,18 @@ from pydantic import BaseModel
 from typing import List, Dict
 
 
-class ConversationHeaders(BaseModel):
-    conversation_header: List[Dict[str, str]]
+class ConversationHeaderItem(BaseModel):
+    conversation_id: str
+    short_name: str
 
+class ConversationHeaders(BaseModel):
+    conversationsHeaders: List[ConversationHeaderItem]
+
+class ConversationHistoryItem(BaseModel):
+    conversation_id: str
+    role: str
+    message: str
 
 class ConversationHistory(BaseModel):
-    conversation_history: List[Dict[str, str, str,str]]
+    conversationHistory: List[ConversationHistoryItem]
+
