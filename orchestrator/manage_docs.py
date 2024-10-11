@@ -20,9 +20,10 @@ from typing import Dict, Any, List
 
 from api.chat import ChatResponse
 from api.getFiles import FilesResponse
+from api.conversation import ConversationHeaders, ConversationHistory
 
 import io
-
+import json 
 class DataFrameResponse(BaseModel):
     dataframe: List[Dict[str, Any]]
     sql_query: str
@@ -62,22 +63,31 @@ async def upload_docs(file_data: UploadFile = File(...)):
     logging.info(f"File {file_name} sent to queue for indexing.")
 
 
-def get_reply(user_input, content):
+def get_reply(user_input, content, token = None, conversation_id = None):
 
+    
+    cosmosdb_helper = CosmosDBManager(COSMOSDB_ENDPOINT,    
+                                    COSMOSDB_KEY, 
+                                    COSMOSDB_DATABASE_NAME, 
+                                    COSMOSDB_CONTAINER_NAME_CONVERSATIONS)
+    
     azure_open_ai_manager = AzureOpenAIManager(
                     endpoint=AZURE_OPENAI_ENDPOINT,
                     api_key=AZURE_OPENAI_KEY,
                     deployment_id=AZURE_OPENAI_DEPLOYMENT_ID,
-                    api_version="2023-05-15"
-                )
+                    api_version="2023-05-15",
+                    cosmosdb_helper = cosmosdb_helper,
+                    token = token
+                )             
     
     conversation=[{"role": "system", "content": "If the answer is not found within the context, please mention \
         that the answer is not found \
         Do not answer anything which is not in the context"}]
-    reply = azure_open_ai_manager.generate_reply_from_context(user_input, content, conversation)
-    return reply
+    reply,conversation_id = azure_open_ai_manager.generate_reply_from_context(user_input, 
+                        content,conversation, conversation_id)
+    return reply,conversation_id
 
-def search_docs(query):
+def search_docs(query, token = None, conversation_id = None):
     """
     Searches for documents in Azure Search
     :param query: The query to search for
@@ -103,7 +113,7 @@ def search_docs(query):
                     reranker_score =  search.get_results_semantic_search(query)
     
     context = "\n".join(results)
-    reply = get_reply(query, context)
+    reply,conversation_id = get_reply(query, context,token=token, conversation_id=conversation_id)
 
     URLs = []
     
@@ -114,7 +124,8 @@ def search_docs(query):
 
     return ChatResponse(reply=reply[0], 
     metadata_source_page_to_return=metadata_source_page_to_return,
-    URLs=URLs, reranker_confidence=reranker_confidence)
+    URLs=URLs, reranker_confidence=reranker_confidence,
+    conversation_id=conversation_id)
 
 def get_reranker_confidence(reranker_score):
     """
@@ -158,6 +169,8 @@ async def get_image_analysis(image_data: UploadFile = File(...)):
     response = azure_open_ai_manager_4o.get_image_analysis(prompt,image_base64)
 
     response = response.replace("```json", "").replace("```", "")
+
+    response = json.loads(response)
     return response
 
 def get_indexed_files():
@@ -238,3 +251,31 @@ def get_SQL_query(user_input,
   
 def get_SQL_VARS():
     return server, database, username, password
+
+def get_chat_history(conversation_id):
+    cosmosdb_helper = CosmosDBManager(COSMOSDB_ENDPOINT,    
+                                    COSMOSDB_KEY, 
+                                    COSMOSDB_DATABASE_NAME, 
+                                    COSMOSDB_CONTAINER_NAME_CONVERSATIONS)
+    query = f'SELECT * FROM c WHERE c.conversation_id = "{conversation_id}"'
+    items = cosmosdb_helper.read_items(query)
+    
+    return items
+
+def get_recent_conversations():
+    cosmosdb_helper = CosmosDBManager(COSMOSDB_ENDPOINT,    
+                                    COSMOSDB_KEY, 
+                                    COSMOSDB_DATABASE_NAME, 
+                                    COSMOSDB_CONTAINER_NAME_CONVERSATIONS_HEADER)
+    query = "SELECT * FROM c ORDER BY c._ts DESC"
+    items = cosmosdb_helper.read_items(query)
+    conversation_header_list = []
+    for item in items:
+        d= {}
+        d["conversation_id"] = item["conversation_id"]
+        d["short_name"] = item["short_name"]
+        conversation_header_list.append(d)
+    return ConversationHeaders(conversationsHeaders=
+                               conversation_header_list)
+
+
