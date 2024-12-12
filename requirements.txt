@@ -25,3 +25,8 @@ langchain-community
 langchain_openai
 langchain
 qdrant-client
+six
+python-jose==3.3.0
+cryptography
+requests
+

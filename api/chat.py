@@ -6,6 +6,8 @@ class ChatResponse(BaseModel):
     metadata_source_page_to_return: List[str]
     URLs: List[str]
     reranker_confidence: str
+    conversation_id: str
 
 class SQLRequest(BaseModel):
     query: str
+    conversation_id: str
