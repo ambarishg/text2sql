@@ -24,3 +24,4 @@ python-multipart
 langchain-community
 langchain_openai
 langchain
+qdrant-client

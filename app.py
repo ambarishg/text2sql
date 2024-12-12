@@ -1,6 +1,6 @@
 import sys
 sys.path.append('..')
-
+from config import *
 
 from fastapi import FastAPI, HTTPException
 from orchestrator.manage_docs import upload_docs, _get_SQL_query, \
@@ -10,7 +10,7 @@ from fastapi import UploadFile, File
 from api.chat import SQLRequest
 from api.document_comparator import *
 from orchestrator.document_comparator import compare_documents
-
+from orchestrator.manage_docs_qdrant import search_docs_qdrant
 
 app = FastAPI()
 
@@ -58,7 +58,10 @@ async def _get_sql_vars():
 @app.post("/get_answer_from_question/")
 async def get_answer_from_question(user_input: SQLRequest):
     try:
-        response =  search_docs(user_input.query)
+        if VECTOR_DB == "AZURE_SEARCH":
+            response =  search_docs(user_input.query)
+        elif VECTOR_DB == "QDRANT":
+            response =  search_docs_qdrant(user_input.query)
         return response
     except Exception as e:
         logging.error(e)
