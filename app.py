@@ -21,6 +21,7 @@ from jose import jwt
 import requests
 from orchestrator.manage_docs import get_recent_conversations
 from api.conversation import ConversationHeaders, ConversationHistory
+from orchestrator.manage_docs_qdrant import *
 
 app = FastAPI()
 
@@ -117,7 +118,7 @@ async def get_answer_from_question(user_input: SQLRequest, user=Depends(get_curr
         if VECTOR_DB == "AZURE_SEARCH":
             response = search_docs(user_input.query, token , user_input.conversation_id)
         elif VECTOR_DB == "QDRANT":
-            response =  search_docs_qdrant(user_input.query)
+            response =  search_docs_qdrant(user_input.query,token , user_input.conversation_id)
         return response
     except Exception as e:
         logging.error(e)
