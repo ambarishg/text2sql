@@ -5,10 +5,13 @@ from config import *
 from fastapi import FastAPI, HTTPException
 from orchestrator.manage_docs import upload_docs, _get_SQL_query, \
     get_SQL_VARS, search_docs, get_image_analysis, get_indexed_files
+
 import logging
 from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Request
 from fastapi.middleware.cors import CORSMiddleware
-from orchestrator.manage_docs import upload_docs, _get_SQL_query, get_SQL_VARS, search_docs, get_image_analysis, get_indexed_files
+from orchestrator.manage_docs import \
+upload_docs, _get_SQL_query, get_SQL_VARS, search_docs, \
+get_image_analysis, get_indexed_files,get_simple_image_analysis
 from api.chat import SQLRequest
 from api.document_comparator import DocumentComparatorRequest
 from orchestrator.document_comparator import compare_documents
@@ -40,6 +43,7 @@ app.add_middleware(
 
 async def get_current_user(request: Request):
     token = request.headers.get("Authorization")
+    print(token)
     if not token:
         raise HTTPException(status_code=401, detail="Authorization header missing")
 
@@ -87,10 +91,23 @@ async def _upload_docs(file: UploadFile = File(...), user=Depends(get_current_us
     await upload_docs(file)
 
 @app.post("/get_image_analysis/")
-async def _get_image_analysis(file: UploadFile = File(...), user=Depends(get_current_user)):
+async def _get_image_analysis(file: UploadFile = File(...), 
+                              ):
     try:
-        logging.info(f"user: {user}")
+        
         response = await get_image_analysis(file)
+        return response
+    except Exception as e:
+        logging.error(e)
+        raise HTTPException(status_code=500, detail="Error in image analysis")
+    
+
+@app.post("/get-simple-image-analysis/")
+async def _get_simple_image_analysis(file: UploadFile = File(...), 
+                              ):
+    try:
+        
+        response = await get_simple_image_analysis(file)
         return response
     except Exception as e:
         logging.error(e)

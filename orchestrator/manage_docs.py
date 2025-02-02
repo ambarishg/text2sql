@@ -168,10 +168,50 @@ async def get_image_analysis(image_data: UploadFile = File(...)):
     
     response = azure_open_ai_manager_4o.get_image_analysis(prompt,image_base64)
 
+    print(f"The response is {response}")
+
     response = response.replace("```json", "").replace("```", "")
 
     response = json.loads(response)
     return response
+
+async def get_simple_image_analysis(image_data: UploadFile = File(...)):
+    """
+    Get image analysis from Azure Open AI
+    :param image_data: The image data
+    :return: The image analysis response
+    
+    """
+    print("Inside get_simple_image_analysis")
+    azure_open_ai_manager_4o = AzureOpenAIManager(
+                    endpoint=AZURE_OPENAI_ENDPOINT,
+                    api_key=AZURE_OPENAI_KEY,
+                    deployment_id=AZURE_OPENAI_DEPLOYMENT_GPT_4O_ID,
+                    api_version="2023-05-15"
+                )
+    from PIL import Image
+    prompt = """
+    
+    Please mention the following items in pointwise fashion
+
+     1.Please mention if there is any pollen associated with 
+       the bees in the picture.
+     2. How many bees are present
+     3. How many are drone bees
+
+    """
+
+    # prompt = "Please describe the image in detail."
+    
+    contents = await image_data.read()
+    image_base64 = encode_image(contents)
+    
+    response = azure_open_ai_manager_4o.get_image_analysis(prompt,image_base64)
+
+    print(f"The response is {response}")
+   
+    return response
+
 
 def get_indexed_files():
     """
