@@ -169,6 +169,15 @@ async def get_conversation_headers():
         logging.error(e)
         raise HTTPException(status_code=500, detail="Error in Get Conversation Headers")
 
+@app.get("/hello/")
+async def hello():
+    try:
+        response = {"message": "Hello"}
+        return response
+    except Exception as e:
+        logging.error(e)
+        raise HTTPException(status_code=500, detail="Error in Hello")
+    
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
