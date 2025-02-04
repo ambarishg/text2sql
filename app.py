@@ -48,39 +48,39 @@ async def get_current_user(request: Request):
         raise HTTPException(status_code=401, detail="Authorization header missing")
 
     token = token.replace("Bearer ", "")
-    jsonurl = urlopen("https://login.microsoftonline.com/" +
-                    TENANT_ID + "/discovery/v2.0/keys")
-    jwks = json.loads(jsonurl.read())
-    unverified_header = jwt.get_unverified_header(token)
-    unverified_claims = jwt.get_unverified_claims(token)
-    issuer = unverified_claims.get("iss")
-    audience = unverified_claims.get("aud")
-    rsa_key = {}
-    for key in jwks["keys"]:
-        if key["kid"] == unverified_header["kid"]:
-            rsa_key = {
-                "kty": key["kty"],
-                "kid": key["kid"],
-                "use": key["use"],
-                "n": key["n"],
-                "e": key["e"]
-            }
-            break
-    if rsa_key:
-        try:
-            payload = jwt.decode(token, 
-                                rsa_key, 
-                                algorithms=["RS256"], 
-                                audience=audience, issuer=issuer)
-            print("Signature verified")
-            print(payload["given_name"])
-        except jwt.ExpiredSignatureError:
-            print("Token is expired")
-        except jwt.JWTClaimsError:
-            print("Incorrect claims, please check the audience and issuer")
-        except jwt.JWTError as e:
-            print("Error decoding token")
-            print(e)
+    # jsonurl = urlopen("https://login.microsoftonline.com/" +
+    #                 TENANT_ID + "/discovery/v2.0/keys")
+    # jwks = json.loads(jsonurl.read())
+    # unverified_header = jwt.get_unverified_header(token)
+    # unverified_claims = jwt.get_unverified_claims(token)
+    # issuer = unverified_claims.get("iss")
+    # audience = unverified_claims.get("aud")
+    # rsa_key = {}
+    # for key in jwks["keys"]:
+    #     if key["kid"] == unverified_header["kid"]:
+    #         rsa_key = {
+    #             "kty": key["kty"],
+    #             "kid": key["kid"],
+    #             "use": key["use"],
+    #             "n": key["n"],
+    #             "e": key["e"]
+    #         }
+    #         break
+    # if rsa_key:
+    #     try:
+    #         payload = jwt.decode(token, 
+    #                             rsa_key, 
+    #                             algorithms=["RS256"], 
+    #                             audience=audience, issuer=issuer)
+    #         print("Signature verified")
+    #         print(payload["given_name"])
+    #     except jwt.ExpiredSignatureError:
+    #         print("Token is expired")
+    #     except jwt.JWTClaimsError:
+    #         print("Incorrect claims, please check the audience and issuer")
+    #     except jwt.JWTError as e:
+    #         print("Error decoding token")
+    #         print(e)
         
     return token
     
