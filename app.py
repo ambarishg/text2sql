@@ -73,7 +73,7 @@ async def get_current_user(request: Request):
                                 algorithms=["RS256"], 
                                 audience=audience, issuer=issuer)
             print("Signature verified")
-            print(payload["given_name"])
+            # print(payload["given_name"])
         except jwt.ExpiredSignatureError:
             print("Token is expired")
         except jwt.JWTClaimsError:
