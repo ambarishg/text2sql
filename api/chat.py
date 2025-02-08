@@ -7,6 +7,7 @@ class ChatResponse(BaseModel):
     URLs: List[str]
     reranker_confidence: str
     conversation_id: str
+    search_results: List[str]
 
 class SQLRequest(BaseModel):
     query: str

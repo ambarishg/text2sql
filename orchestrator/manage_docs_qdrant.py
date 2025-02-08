@@ -85,4 +85,5 @@ def search_docs_qdrant(query,token = None, conversation_id = None):
     return ChatResponse(reply=reply[0], 
     metadata_source_page_to_return=metadata_source_page_to_return,
     URLs=URLs, reranker_confidence=reranker_confidence,
-    conversation_id=conversation_id)
+    conversation_id=conversation_id,
+    search_results=results)
