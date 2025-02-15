@@ -12,7 +12,7 @@ from azurequeues import azure_queue_helper
 import logging
 from cosmos.cosmosdbmanager import CosmosDBManager
 import pandas as pd
-from fastapi import UploadFile, File
+from fastapi import UploadFile, File, Form
 from sqlmanager.azuresqlmanager import AzureSQLManager
 
 from pydantic import BaseModel
@@ -21,15 +21,20 @@ from typing import Dict, Any, List
 from api.chat import ChatResponse
 from api.getFiles import FilesResponse
 from api.conversation import ConversationHeaders, ConversationHistory
-
+from file_load_status_helper.file_load_status_helper import CosmosDBLoadStatusHelper
+from file_load_status_helper.interface_load_status_helper import ILoadStatusHelper
 import io
 import json 
+import uuid
+
 class DataFrameResponse(BaseModel):
     dataframe: List[Dict[str, Any]]
     sql_query: str
 
 
-async def upload_docs(file_data: UploadFile = File(...)):
+async def upload_docs(file_data: UploadFile = File(...),
+                      category: str = Form(...),
+                      user_id: str = Form(...)):
 
     """
     Uploads the document to Azure Blob Storage and Azure Search
@@ -42,6 +47,10 @@ async def upload_docs(file_data: UploadFile = File(...)):
    
     logging.basicConfig(level=logging.INFO)
 
+    logging.info(f"User id is {user_id}")
+    logging.info(f"Category is {category}")
+    logging.info(f"File name is {file_data.filename}")  
+
     azure_blob_helper_datasource = AzureBlobHelper(AZ_ST_ACC_NAME,
                                                 AZ_ST_ACC_KEY,
                                                 AZ_ST_DATASOURCE_CONTAINER_NAME)
@@ -49,11 +58,17 @@ async def upload_docs(file_data: UploadFile = File(...)):
                                                         AZURE_QUEUE_STORAGE_KEY,
                                                         AZURE_QUEUE_NAME)
     
+    cosmos_db_helper = CosmosDBManager(COSMOSDB_ENDPOINT,
+                                    COSMOSDB_KEY,
+                                    COSMOSDB_DATABASE_NAME,
+                                    COSMOSDB_CONTAINER_NAME)
+    
     content = await file_data.read()
     file_name = file_data.filename
     azure_blob_helper_datasource.upload_blob(content, file_name)
     message = {"full_path": 
-    f"https://{AZ_ST_ACC_NAME}.blob.core.windows.net/{AZ_ST_DATASOURCE_CONTAINER_NAME}/{file_name}",}
+    f"https://{AZ_ST_ACC_NAME}.blob.core.windows.net/{AZ_ST_DATASOURCE_CONTAINER_NAME}/{file_name}",
+    "category": category, "user_id": user_id}
 
     # Convert the dictionary to a JSON string
     import json
@@ -61,6 +76,16 @@ async def upload_docs(file_data: UploadFile = File(...)):
     queue_service.send_message(message_str)
 
     logging.info(f"File {file_name} sent to queue for indexing.")
+
+    file_load_status_helper = CosmosDBLoadStatusHelper()
+    
+    item = {"filename": file_name,
+    "category": category, 
+    "user_id": user_id, 
+    "status":"UPLOADED"}
+
+    file_load_status_helper.set_file_load_status(item)
+
 
 
 def get_reply(user_input, content, token = None, conversation_id = None):
@@ -213,7 +238,7 @@ async def get_simple_image_analysis(image_data: UploadFile = File(...)):
     return response
 
 
-def get_indexed_files():
+def get_indexed_files(user_id):
     """
     Get the uploaded files to index
     :return: The uploaded files
@@ -226,17 +251,26 @@ def get_indexed_files():
 
 
 
+    print(f"User id is {user_id}")
+    query = f'SELECT * FROM c WHERE c.user_id = "{user_id}" ORDER BY c._ts DESC'
 
-    query = "SELECT * FROM c WHERE c.processed = true ORDER BY c._ts DESC"
+    print(f"Query is {query}")
+
 
     uploaded_files = cosmos_db_manager.read_items(query)
 
     li = []
+    category_list = []
+    status_list = []
 
     for row in uploaded_files:
         li.append(row["filename"])
+        category_list.append(row["category"])
+        status_list.append(row["status"])
     
-    return FilesResponse(file_list=li)
+    return FilesResponse(file_list=li, 
+                         category_list=category_list,
+                         status_list = status_list)
 
 
 def _get_SQL_query(user_input):
@@ -317,5 +351,17 @@ def get_recent_conversations():
         conversation_header_list.append(d)
     return ConversationHeaders(conversationsHeaders=
                                conversation_header_list)
+
+def get_categories_user(user_id):
+    cosmosdb_helper = CosmosDBManager(COSMOSDB_ENDPOINT,    
+                                    COSMOSDB_KEY, 
+                                    COSMOSDB_DATABASE_NAME, 
+                                    COSMOSDB_CONTAINER_NAME_CONVERSATIONS_CATEGORY)
+    query = f'SELECT * FROM c WHERE c.user_id = "{user_id}"'
+    items = cosmosdb_helper.read_items(query)
+    categories = set()
+    for item in items:
+        categories.add(item["category"])
+    return list(categories)
 
 

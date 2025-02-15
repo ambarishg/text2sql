@@ -7,7 +7,7 @@ from orchestrator.manage_docs import upload_docs, _get_SQL_query, \
     get_SQL_VARS, search_docs, get_image_analysis, get_indexed_files
 
 import logging
-from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Request
+from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Request, Form
 from fastapi.middleware.cors import CORSMiddleware
 from orchestrator.manage_docs import \
 upload_docs, _get_SQL_query, get_SQL_VARS, search_docs, \
@@ -22,9 +22,10 @@ from six.moves.urllib.request import urlopen
 from functools import wraps
 from jose import jwt
 import requests
-from orchestrator.manage_docs import get_recent_conversations
+from orchestrator.manage_docs import get_recent_conversations,get_categories_user
 from api.conversation import ConversationHeaders, ConversationHistory
 from orchestrator.manage_docs_qdrant import *
+from api.getFiles import CategoryUserRequest
 
 app = FastAPI()
 
@@ -87,8 +88,10 @@ async def get_current_user(request: Request):
 
 
 @app.post("/upload_docs/")
-async def _upload_docs(file: UploadFile = File(...), user=Depends(get_current_user)):
-    await upload_docs(file)
+async def _upload_docs(file: UploadFile = File(...), 
+                        category: str = Form(...),
+                        user_id: str = Form(...)):
+    await upload_docs(file, category, user_id)
 
 @app.post("/get_image_analysis/")
 async def _get_image_analysis(file: UploadFile = File(...), 
@@ -135,17 +138,21 @@ async def get_answer_from_question(user_input: SQLRequest, user=Depends(get_curr
         if VECTOR_DB == "AZURE_SEARCH":
             response = search_docs(user_input.query, token , user_input.conversation_id)
         elif VECTOR_DB == "QDRANT":
-            response =  search_docs_qdrant(user_input.query,token , user_input.conversation_id)
+            response =  search_docs_qdrant(user_input.query,token , 
+                                           user_input.conversation_id,
+                                           user_input.category,
+                                           user_input.user_id)
         return response
     except Exception as e:
         logging.error(e)
         raise HTTPException(status_code=500, detail="Error in search")
 
 @app.post("/get_files_indexed/")
-async def _get_files_indexed(user=Depends(get_current_user)):
+async def _get_files_indexed(category_user:CategoryUserRequest,
+                             user=Depends(get_current_user)):
     try:
         logging.info(f"user: {user}")
-        response = get_indexed_files()
+        response = get_indexed_files(category_user.user_id)
         return response
     except Exception as e:
         logging.error(e)
@@ -169,6 +176,15 @@ async def get_conversation_headers():
         logging.error(e)
         raise HTTPException(status_code=500, detail="Error in Get Conversation Headers")
 
+@app.post("/get_categories")
+async def get_categories(category_user:CategoryUserRequest):
+    try:
+        response = get_categories_user(category_user.user_id)
+        return response
+    except Exception as e:
+        logging.error(e)
+        raise HTTPException(status_code=500, detail="Error in Get Categories")
+    
 @app.get("/hello/")
 async def hello():
     try:

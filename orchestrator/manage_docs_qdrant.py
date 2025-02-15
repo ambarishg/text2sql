@@ -34,7 +34,7 @@ def get_reply(user_input, content, token = None, conversation_id = None):
     azure_open_ai_manager = AzureOpenAIManager(
                     endpoint=AZURE_OPENAI_ENDPOINT,
                     api_key=AZURE_OPENAI_KEY,
-                    deployment_id=AZURE_OPENAI_DEPLOYMENT_ID,
+                    deployment_id=AZURE_OPENAI_DEPLOYMENT_GPT_4O_ID,
                     api_version="2023-05-15",
                     cosmosdb_helper = cosmosdb_helper,
                     token = token
@@ -48,7 +48,8 @@ def get_reply(user_input, content, token = None, conversation_id = None):
     return reply,conversation_id
 
 
-def search_docs_qdrant(query,token = None, conversation_id = None):
+def search_docs_qdrant(query,token = None, conversation_id = None,
+                       category = None,user_id=None):
     """
     Searches for documents in Azure Search
     :param query: The query to search for
@@ -64,7 +65,8 @@ def search_docs_qdrant(query,token = None, conversation_id = None):
     results, \
     metadata_source_filename_to_return, \
     metadata_source_page_to_return, \
-    reranker_score =  search.get_search_results(query)
+    reranker_score =  search.get_search_results(query,CATEGORY=category,
+                                                user_id=user_id)
     
     context = "\n".join(results)
     reply,conversation_id = get_reply(query, context,token=token, conversation_id=conversation_id)

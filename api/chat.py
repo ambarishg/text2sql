@@ -12,3 +12,5 @@ class ChatResponse(BaseModel):
 class SQLRequest(BaseModel):
     query: str
     conversation_id: str
+    category: str
+    user_id: str
