@@ -40,9 +40,7 @@ def get_reply(user_input, content, token = None, conversation_id = None):
                     token = token
                 )             
     
-    conversation=[{"role": "system", "content": "If the answer is not found within the context, please mention \
-        that the answer is not found \
-        Do not answer anything which is not in the context"}]
+    conversation=[]
     reply,conversation_id = azure_open_ai_manager.generate_reply_from_context(user_input, 
                         content,conversation, conversation_id)
     return reply,conversation_id

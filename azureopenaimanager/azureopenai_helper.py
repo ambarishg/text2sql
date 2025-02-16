@@ -54,7 +54,7 @@ class AzureOpenAIManager(ILLMHelper):
     def create_prompt(self,context,query):
         header = "If the answer is not found within the context, please mention \
         that the answer is not found \
-        Do not answer anything which is not in the context"
+        Do not answer anything which is not in the context.Please return the response in plain text. Convert any markdown to plain text"
        
         return header + context + "\n\n" + query + "\n"
      

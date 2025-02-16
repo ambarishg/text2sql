@@ -128,10 +128,7 @@ class QdrantHelper:
             print("No results found")
             
         for result in results:
-            print(result.score)
-            if result.score < 0.3:
-                continue
-                
+            print(result.score)                
             results_to_return.append(result.payload['content'])
 
             if '@search.reranker_score' in result.payload:
