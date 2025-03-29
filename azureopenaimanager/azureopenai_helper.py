@@ -100,6 +100,7 @@ class AzureOpenAIManager(ILLMHelper):
                 
         conversation.append({"role": "assistant", "content": prompt})
         conversation.append({"role": "user", "content": user_input})
+        conversation.insert(0, {"role": "system", "content": "Please think step by step."})
 
 
         reply = self.generate_answer(conversation)
